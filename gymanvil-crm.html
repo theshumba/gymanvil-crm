@@ -19,9 +19,9 @@
 <!-- Firebase (shared backend for multi-device sync). See FIREBASE-SETUP.md. -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
   import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, serverTimestamp, writeBatch, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-  window.__fb = { initializeApp, getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, serverTimestamp, writeBatch, runTransaction };
+  window.__fb = { initializeApp, getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, serverTimestamp, writeBatch, runTransaction };
   window.dispatchEvent(new Event('fb-ready'));
 </script>
 <!--
@@ -1178,10 +1178,18 @@ const GymAnvilSync = (function () {
       const authed = await new Promise((resolve) => {
         let settled = false;
         const done = (v) => { if (!settled) { settled = true; resolve(v); } };
-        setTimeout(() => { if (!settled) { hideHQAuthOverlay(); done(null); } }, 6000);
-        window.__fb.onAuthStateChanged(auth, (user) => {
-          if (user) { hideHQAuthOverlay(); done(user); }
-          else if (!settled) { showHQAuthOverlay(); }
+        setTimeout(() => { if (!settled) { hideHQAuthOverlay(); done(null); } }, 8000);
+        window.__fb.onAuthStateChanged(auth, async (user) => {
+          if (user) { hideHQAuthOverlay(); done(user); return; }
+          // No session yet. Anonymous sign-in is what's enabled on this project,
+          // so take it silently — no login box for a single-user tool. If it's
+          // turned off (or an owner account is set up later), fall back to the
+          // email/password overlay.
+          try {
+            await window.__fb.signInAnonymously(auth);   // onAuthStateChanged fires again
+          } catch (_) {
+            if (!settled) showHQAuthOverlay();
+          }
         }, () => { hideHQAuthOverlay(); done(null); });
       });
       if (!authed) {
