@@ -7440,6 +7440,29 @@ function init() {
 // First-run seed: ship the call sheet with the app so a fresh device (or a device
 // that can't reach the cloud) opens straight into a working CRM instead of an
 // empty one. Only ever runs when there is NOTHING local — never overwrites work.
+// If the CRM has no leads AND we couldn't reach the cloud, say why in plain words.
+// Without this the live page just looks broken, which is worse than a blank page.
+function showSetupNoticeIfEmpty() {
+  const real = (Array.isArray(state.leads) ? state.leads : []).filter(l => l && l.source !== 'sample');
+  const existing = document.getElementById('ga-setup-notice');
+  if (real.length) { if (existing) existing.remove(); return; }
+  if (existing) return;
+  const el = document.createElement('div');
+  el.id = 'ga-setup-notice';
+  el.style.cssText = 'position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:9999;max-width:560px;'
+    + 'background:var(--color-surface);border:1px solid var(--color-border);border-left:4px solid var(--color-primary);'
+    + 'border-radius:12px;padding:16px 18px;box-shadow:var(--shadow-md);color:var(--color-text);font-size:14px;line-height:1.5;';
+  el.innerHTML = '<b>One step left to load your 882 leads.</b><br>'
+    + 'Firebase sign-in is not switched on for this project yet, so the CRM can\'t reach the cloud.<br><br>'
+    + '1. Open <a href="https://console.firebase.google.com/project/gymanvil-crm/authentication" target="_blank" rel="noopener" style="color:var(--color-primary);">Firebase Authentication</a>, click <b>Get started</b>, pick <b>Email/Password</b>, enable it, save.<br>'
+    + '2. In the repo run <code>node scripts/setup-owner-auth.mjs</code>, then reload this page.<br><br>'
+    + '<button id="ga-setup-dismiss" style="border:1px solid var(--color-border);background:none;color:var(--color-text);'
+    + 'border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;">Dismiss</button>';
+  document.body.appendChild(el);
+  const btn = document.getElementById('ga-setup-dismiss');
+  if (btn) btn.addEventListener('click', () => el.remove());
+}
+
 async function seedIfEmpty() {
   // "Empty" means no REAL leads. The app ships 3 fictional sample leads, and those
   // must not block the real call sheet from loading on a fresh device.
@@ -7465,7 +7488,7 @@ async function startSharedSync() {
     const ok = await GymAnvilSync.init();
     if (!ok) {
       GymAnvilSync.showSyncStatus('offline');
-      await seedIfEmpty();
+      if (!(await seedIfEmpty())) showSetupNoticeIfEmpty();
       return;
     }
     await GymAnvilSync.fetchOnce((remoteLeads, meta) => {
@@ -7557,10 +7580,10 @@ async function startSharedSync() {
     }, 1500);
     // Call Brain data (inbox briefs + cross-call patterns) rides the same session fetch.
     loadBrainData();
-    await seedIfEmpty();   // cloud reachable but returned nothing (e.g. rules block reads)
+    if (!(await seedIfEmpty())) showSetupNoticeIfEmpty();   // cloud reachable but empty
   } catch (e) {
     console.warn('startSharedSync failed', e);
-    await seedIfEmpty();
+    if (!(await seedIfEmpty())) showSetupNoticeIfEmpty();
   }
 }
 
