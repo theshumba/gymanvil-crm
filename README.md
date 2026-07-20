@@ -4,6 +4,7 @@ Single-file CRM for Gym Anvil outreach to **premium independent UK gyms**.
 Vanilla HTML + JS, no build step. localStorage is the local-first store,
 Firebase Firestore syncs on top.
 
+- **Live: https://gymanvil-crm.vercel.app**
 - App: `gymanvil-crm.html`
 - Firebase project: `gymanvil-crm` (Firestore in eur3)
 - Leads live in the Firestore `leads` collection, behind owner sign-in.
@@ -41,3 +42,21 @@ Each lead is bucketed by its wedge, which drives the WhatsApp and email template
 - `serviceAccountKey.json` — Firebase admin credentials.
 - `leads-seed.json` — the call sheet itself. This repo is public (GitHub Pages
   free tier), and the lead list is work product, so it is never committed.
+
+## Deploying
+
+Hosted on **Vercel** (`gymanvil-crm.vercel.app`). GitHub Pages was the intended
+home but its build service was failing on this repo (every Pages/Actions run
+returned `startup_failure`, including a no-op test workflow), so Vercel serves it.
+The Pages config is still in place if it recovers.
+
+```bash
+npx vercel deploy --prod --yes     # publish the current local files
+```
+
+`.vercelignore` keeps `serviceAccountKey.json`, `leads-seed.json` and `scripts/`
+off the public URL. Verify after any deploy:
+
+```bash
+curl -o /dev/null -w '%{http_code}\n' https://gymanvil-crm.vercel.app/serviceAccountKey.json  # must be 404
+```

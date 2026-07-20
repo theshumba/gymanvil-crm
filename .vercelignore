@@ -1,0 +1,10 @@
+# NEVER upload these to a public URL.
+serviceAccountKey.json
+leads-seed.json
+node_modules
+scripts
+.github
+firestore.rules
+firestore.indexes.json
+firebase.json
+package-lock.json

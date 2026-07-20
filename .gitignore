@@ -4,3 +4,4 @@ node_modules/
 # The call sheet is Melusi's work product. This repo must be PUBLIC for GitHub
 # Pages, so the lead list never goes in it — it lives in Firestore behind auth.
 leads-seed.json
+.vercel
