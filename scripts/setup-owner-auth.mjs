@@ -8,6 +8,9 @@
 //   node scripts/setup-owner-auth.mjs                      # default email, prompts nothing
 //   node scripts/setup-owner-auth.mjs you@example.com 'password'
 //
+// The login email is shumbafilms@gmail.com — the same Google account that owns
+// this Firebase project. It is only a username here; no mail is ever sent to it.
+//
 // Idempotent: if the account already exists it just resets the password.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,7 +20,7 @@ import admin from 'firebase-admin';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 
-const email = process.argv[2] || 'joshuakhalili20@gmail.com';
+const email = process.argv[2] || 'shumbafilms@gmail.com';
 const password = process.argv[3] || 'GymAnvil2026!';
 
 admin.initializeApp({
