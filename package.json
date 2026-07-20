@@ -1,0 +1,14 @@
+{
+  "name": "gymanvil-crm-scripts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "import": "node scripts/import-leads.mjs",
+    "crm": "node scripts/crm.mjs"
+  },
+  "dependencies": {
+    "csv-parse": "^5.5.0",
+    "firebase-admin": "^12.7.0"
+  }
+}

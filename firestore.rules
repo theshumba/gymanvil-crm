@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Gym Anvil CRM — signed-in-only. The page is publicly hosted (GitHub Pages
+    // free tier needs a public repo); these rules are the lock, not the URL.
+    //
+    // Owner email/password sign-in is the intended posture: this CRM accumulates
+    // Melusi's call notes, which are not public data even though the leads were
+    // publicly sourced. The importer and CLI use the service account (admin SDK),
+    // which bypasses rules by design.
+    //
+    // TIGHTEN once the owner account exists (Auth must be switched on in the
+    // console first — it cannot be enabled headlessly):
+    //   allow read, write: if request.auth != null && request.auth.uid == '<OWNER_UID>';
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
